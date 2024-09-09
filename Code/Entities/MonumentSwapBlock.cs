@@ -171,34 +171,38 @@ namespace Celeste.Mod.EmHelper.Entities {
                 float num2 = 16f * num;
                 int num3 = 2;
                 while (num3 < num2) {
-                    DrawBlockStyle(vector + (value * num3), Width, Height, nineSliceGreen, activator.Index * (1f - (num3 / num2)));
+                    DrawBlockStyle(SceneAs<Level>().Camera, vector + (value * num3), Width, Height, nineSliceGreen, activator.Index * (1f - (num3 / num2)));
                     num3 += 2;
                 }
             }
 
-            DrawBlockStyle(vector, Width, Height, nineSliceGreen, activator.Index);
+            DrawBlockStyle(SceneAs<Level>().Camera, vector, Width, Height, nineSliceGreen, activator.Index);
         }
 
-        private void DrawBlockStyle(Vector2 pos, float width, float height, MTexture[,] ninSlice, Color color) {
-            int num = (int)(width / 8f);
-            int num2 = (int)(height / 8f);
-            ninSlice[0, 0].Draw(pos + new Vector2(0f, 0f), Vector2.Zero, color);
-            ninSlice[2, 0].Draw(pos + new Vector2(width - 8f, 0f), Vector2.Zero, color);
-            ninSlice[0, 2].Draw(pos + new Vector2(0f, height - 8f), Vector2.Zero, color);
-            ninSlice[2, 2].Draw(pos + new Vector2(width - 8f, height - 8f), Vector2.Zero, color);
-            for (int i = 1; i < num - 1; i++) {
-                ninSlice[1, 0].Draw(pos + new Vector2(i * 8, 0f), Vector2.Zero, color);
-                ninSlice[1, 2].Draw(pos + new Vector2(i * 8, height - 8f), Vector2.Zero, color);
-            }
+        private static void DrawBlockStyle(Camera camera, Vector2 pos, float width, float height, MTexture[,] ninSlice, Color color) {
+            Rectangle cameraBounds = camera.GetBounds();
+            if (pos.X + width < cameraBounds.Left || pos.Y + height < cameraBounds.Top || pos.X > cameraBounds.Right || pos.Y > cameraBounds.Bottom)
+                return;
 
-            for (int j = 1; j < num2 - 1; j++) {
-                ninSlice[0, 1].Draw(pos + new Vector2(0f, j * 8), Vector2.Zero, color);
-                ninSlice[2, 1].Draw(pos + new Vector2(width - 8f, j * 8), Vector2.Zero, color);
-            }
+            cameraBounds.Inflate(ninSlice[0, 0].Width, ninSlice[0, 0].Height);
 
-            for (int k = 1; k < num - 1; k++) {
-                for (int l = 1; l < num2 - 1; l++) {
-                    ninSlice[1, 1].Draw(pos + (new Vector2(k, l) * 8f), Vector2.Zero, color);
+            int tilesX = (int)(width / 8f);
+            int tilesY = (int)(height / 8f);
+            ninSlice[0, 0].DrawIfInRect(cameraBounds, pos + new Vector2(0f, 0f), Vector2.Zero, color);
+            ninSlice[2, 0].DrawIfInRect(cameraBounds, pos + new Vector2(width - 8f, 0f), Vector2.Zero, color);
+            ninSlice[0, 2].DrawIfInRect(cameraBounds, pos + new Vector2(0f, height - 8f), Vector2.Zero, color);
+            ninSlice[2, 2].DrawIfInRect(cameraBounds, pos + new Vector2(width - 8f, height - 8f), Vector2.Zero, color);
+            for (int i = 1; i < tilesX - 1; i++) {
+                ninSlice[1, 0].DrawIfInRect(cameraBounds, pos + new Vector2(i * 8, 0f), Vector2.Zero, color);
+                ninSlice[1, 2].DrawIfInRect(cameraBounds, pos + new Vector2(i * 8, height - 8f), Vector2.Zero, color);
+            }
+            for (int i = 1; i < tilesY - 1; i++) {
+                ninSlice[0, 1].DrawIfInRect(cameraBounds, pos + new Vector2(0f, i * 8), Vector2.Zero, color);
+                ninSlice[2, 1].DrawIfInRect(cameraBounds, pos + new Vector2(width - 8f, i * 8), Vector2.Zero, color);
+            }
+            for (int i = 1; i < tilesX - 1; i++) {
+                for (int j = 1; j < tilesY - 1; j++) {
+                    ninSlice[1, 1].DrawIfInRect(cameraBounds, pos + (new Vector2(i, j) * 8f), Vector2.Zero, color);
                 }
             }
         }
@@ -248,7 +252,7 @@ namespace Celeste.Mod.EmHelper.Entities {
 
             public override void Render() {
                 float alpha = 0.5f * (0.5f + (((float)Math.Sin(timer) + 1f) * 0.25f));
-                block.DrawBlockStyle(new Vector2(block.moveRect.X, block.moveRect.Y), block.moveRect.Width, block.moveRect.Height, block.nineSliceTarget, block.activator.Index * alpha);
+                DrawBlockStyle(SceneAs<Level>().Camera, new Vector2(block.moveRect.X, block.moveRect.Y), block.moveRect.Width, block.moveRect.Height, block.nineSliceTarget, block.activator.Index * alpha);
             }
 
             private readonly MonumentSwapBlock block;
